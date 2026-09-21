@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { resolveSiteUrl } from "./profile.ts";
 
-const FALLBACK = "https://portfolio-rehan.vercel.app";
+const FALLBACK = "http://localhost:3000";
 
 test("falls back when the variable is unset", () => {
   assert.equal(resolveSiteUrl(undefined), FALLBACK);
@@ -16,14 +16,23 @@ test("falls back on empty or whitespace — what Next inlines when unset", () =>
 
 test("keeps a well-formed origin", () => {
   assert.equal(
-    resolveSiteUrl("https://portfolio-rehan.vercel.app"),
-    "https://portfolio-rehan.vercel.app",
+    resolveSiteUrl("https://portfolio-rehan-puce.vercel.app"),
+    "https://portfolio-rehan-puce.vercel.app",
   );
 });
 
 test("accepts a bare host and adds https", () => {
-  assert.equal(resolveSiteUrl("portfolio-rehan.vercel.app"), FALLBACK);
+  assert.equal(
+    resolveSiteUrl("portfolio-rehan-puce.vercel.app"),
+    "https://portfolio-rehan-puce.vercel.app",
+  );
   assert.equal(resolveSiteUrl("example.com"), "https://example.com");
+});
+
+test("never falls back to a domain we do not own", () => {
+  // Guards the bug that pointed canonical/sitemap at a stranger's site.
+  assert.ok(!FALLBACK.includes("vercel.app"));
+  assert.equal(resolveSiteUrl(undefined), "http://localhost:3000");
 });
 
 test("strips a trailing slash or path so metadataBase stays an origin", () => {

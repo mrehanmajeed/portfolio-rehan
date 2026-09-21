@@ -291,7 +291,13 @@ export const navLinks = [
   { label: "Contact", target: "contact" },
 ] as const;
 
-const FALLBACK_SITE_URL = "https://portfolio-rehan.vercel.app";
+/**
+ * Never guess a public domain here. A canonical URL pointing at a host we do
+ * not own hands our search ranking to whoever does own it — `*.vercel.app`
+ * subdomains are first-come, first-served and a plausible-looking guess may
+ * belong to a stranger. Localhost is useless in production but harmless.
+ */
+const FALLBACK_SITE_URL = "http://localhost:3000";
 
 /**
  * Resolves the absolute origin used for metadata, sitemap, and robots.
@@ -315,5 +321,17 @@ export function resolveSiteUrl(raw: string | undefined): string {
   }
 }
 
-/** Set NEXT_PUBLIC_SITE_URL in the Vercel project settings once live. */
-export const siteUrl = resolveSiteUrl(process.env.NEXT_PUBLIC_SITE_URL);
+/**
+ * Read only by server code — metadata, sitemap.ts and robots.ts — so the
+ * non-public Vercel variable is safe to use here.
+ *
+ * Order: an explicit NEXT_PUBLIC_SITE_URL wins; otherwise Vercel's own
+ * production domain, which it injects on every deploy, so the canonical URL
+ * is correct even if nobody sets anything.
+ */
+export const siteUrl = resolveSiteUrl(
+  process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : undefined),
+);
