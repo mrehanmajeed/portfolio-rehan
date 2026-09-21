@@ -1,0 +1,102 @@
+@import "tailwindcss";
+
+/* Design tokens. Every colour in the UI comes from here — no loose hex values
+   scattered through the markup. */
+@theme {
+  --font-sans: var(--font-inter);
+  --font-cormorant: var(--font-cormorant);
+
+  --color-cream: #f4f0ea;
+  --color-sand: #eae8e3;
+  --color-ink: #121212;
+  --color-coal: #161616;
+  --color-graphite: #1a1a1a;
+}
+
+@layer base {
+  html {
+    /* Lenis drives scrolling; native smooth behaviour would fight it. */
+    scroll-behavior: auto;
+  }
+
+  body {
+    background-color: var(--color-cream);
+    color: var(--color-ink);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  /* The footer is revealed by scrolling past the main panel, so a visible
+     scrollbar would misreport the page length. Keyboard and touch scrolling
+     are unaffected. */
+  ::-webkit-scrollbar {
+    display: none;
+  }
+  * {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  :focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+  }
+}
+
+@layer utilities {
+  .link-underline {
+    position: relative;
+  }
+  .link-underline::after {
+    content: "";
+    position: absolute;
+    width: 100%;
+    transform: scaleX(0);
+    height: 1px;
+    bottom: -2px;
+    left: 0;
+    background-color: currentColor;
+    transform-origin: bottom right;
+    transition: transform 0.4s cubic-bezier(0.86, 0, 0.07, 1);
+  }
+  .link-underline:hover::after,
+  .link-underline:focus-visible::after {
+    transform: scaleX(1);
+    transform-origin: bottom left;
+  }
+
+  /* Inherits the surrounding text colour so it stays visible on both the dark
+     hero and the cream philosophy block. */
+  .blinking-cursor {
+    display: inline-block;
+    width: 0.1em;
+    height: 0.8em;
+    background-color: currentColor;
+    margin-left: 0.05em;
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .blinking-cursor {
+    opacity: 1;
+  }
+}

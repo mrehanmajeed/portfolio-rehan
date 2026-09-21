@@ -1,0 +1,7 @@
+# Normalise to LF inside the repository so the same checkout on Windows,
+# macOS, Linux and CI produces identical diffs.
+* text=auto
+
+# Never touch these — byte-for-byte as committed.
+*.pdf binary
+*.svg text eol=lf
