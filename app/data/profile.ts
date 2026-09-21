@@ -291,9 +291,29 @@ export const navLinks = [
   { label: "Contact", target: "contact" },
 ] as const;
 
+const FALLBACK_SITE_URL = "https://portfolio-rehan.vercel.app";
+
 /**
- * Absolute origin used for metadata, sitemap, and robots. Set
- * NEXT_PUBLIC_SITE_URL in the Vercel project settings once the domain is live.
+ * Resolves the absolute origin used for metadata, sitemap, and robots.
+ *
+ * Next inlines `process.env.NEXT_PUBLIC_*` at build time and substitutes an
+ * empty string when the variable is unset, so `??` never fires and
+ * `new URL("")` throws — which fails the production build rather than the
+ * page. A bare host is accepted too, since that is the easy thing to paste
+ * into a dashboard, and anything unparseable falls back instead of breaking
+ * the deploy.
  */
-export const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://rehanmajeed.vercel.app";
+export function resolveSiteUrl(raw: string | undefined): string {
+  const value = raw?.trim();
+  if (!value) return FALLBACK_SITE_URL;
+
+  const withScheme = /^https?:\/\//i.test(value) ? value : `https://${value}`;
+  try {
+    return new URL(withScheme).origin;
+  } catch {
+    return FALLBACK_SITE_URL;
+  }
+}
+
+/** Set NEXT_PUBLIC_SITE_URL in the Vercel project settings once live. */
+export const siteUrl = resolveSiteUrl(process.env.NEXT_PUBLIC_SITE_URL);
