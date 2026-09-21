@@ -1,36 +1,22 @@
 import { NextResponse } from "next/server";
-import nodemailer, { type Transporter } from "nodemailer";
 import { rateLimit, validateContact } from "./validate";
-
-// POST handlers always run per-request, and the default Node.js runtime is the
-// one nodemailer needs for its TCP socket — no route segment config required.
+import { profile } from "../../data/profile";
 
 const RATE_LIMIT = { limit: 5, windowMs: 60 * 60 * 1000 };
-
-let transporter: Transporter | null = null;
+const RESEND_ENDPOINT = "https://api.resend.com/emails";
+const SEND_TIMEOUT_MS = 10_000;
 
 /**
- * Built once per instance and reused — creating a transport per request throws
- * away connection pooling for no benefit.
+ * Resend's shared sender works with no domain verification, but it can only
+ * deliver to the address the Resend account was created with — which is
+ * exactly this form's job. Set CONTACT_FROM_EMAIL once a custom domain is
+ * verified and mail will come from that instead, no code change needed.
  */
-function getTransporter(): Transporter | null {
-  const user = process.env.EMAIL_USER;
-  const pass = process.env.EMAIL_PASS;
+const FROM_ADDRESS =
+  process.env.CONTACT_FROM_EMAIL?.trim() || "Portfolio <onboarding@resend.dev>";
 
-  if (!user || !pass) {
-    console.error(
-      "[contact] EMAIL_USER and EMAIL_PASS must both be set; refusing to send.",
-    );
-    return null;
-  }
-
-  transporter ??= nodemailer.createTransport({
-    service: "gmail",
-    auth: { user, pass },
-  });
-
-  return transporter;
-}
+/** Where enquiries land. Defaults to the address published on the site. */
+const TO_ADDRESS = process.env.CONTACT_TO_EMAIL?.trim() || profile.email;
 
 /** Vercel puts the real client IP first in x-forwarded-for. */
 function clientIp(request: Request): string {
@@ -43,7 +29,10 @@ function clientIp(request: Request): string {
 }
 
 export async function POST(request: Request) {
-  const { allowed, retryAfterSeconds } = rateLimit(clientIp(request), RATE_LIMIT);
+  const { allowed, retryAfterSeconds } = rateLimit(
+    clientIp(request),
+    RATE_LIMIT,
+  );
   if (!allowed) {
     return NextResponse.json(
       { error: "Too many messages sent. Please try again later." },
@@ -66,8 +55,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
 
-  const mailer = getTransporter();
-  if (!mailer) {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  if (!apiKey) {
+    console.error("[contact] RESEND_API_KEY is not set; refusing to send.");
     return NextResponse.json(
       { error: "The contact form is temporarily unavailable." },
       { status: 503 },
@@ -77,20 +67,41 @@ export async function POST(request: Request) {
   const { name, email, message } = result.data;
 
   try {
-    await mailer.sendMail({
-      // Always send as the authenticated mailbox — spoofing the visitor's
-      // address here would fail SPF/DKIM and land in spam.
-      from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_USER,
-      replyTo: `${name} <${email}>`,
-      subject: `Portfolio enquiry from ${name}`,
-      text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
+    const response = await fetch(RESEND_ENDPOINT, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        // Sending as our own verified sender keeps SPF/DKIM valid; the
+        // visitor's address goes in reply_to so Reply answers them, not us.
+        from: FROM_ADDRESS,
+        to: [TO_ADDRESS],
+        reply_to: `${name} <${email}>`,
+        subject: `Portfolio enquiry from ${name}`,
+        text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
+      }),
+      // A hung upstream should fail the request, not hold the function open.
+      signal: AbortSignal.timeout(SEND_TIMEOUT_MS),
     });
+
+    if (!response.ok) {
+      // Logged server-side only: the body can echo configuration detail.
+      const detail = await response.text().catch(() => "");
+      console.error(
+        `[contact] Resend rejected the message (${response.status}):`,
+        detail,
+      );
+      return NextResponse.json(
+        { error: "Failed to send your message. Please email me directly." },
+        { status: 502 },
+      );
+    }
 
     return NextResponse.json({ message: "Message sent." }, { status: 200 });
   } catch (error) {
-    // Logged server-side only: SMTP errors can echo back configuration detail.
-    console.error("[contact] Failed to send message:", error);
+    console.error("[contact] Failed to reach the mail provider:", error);
     return NextResponse.json(
       { error: "Failed to send your message. Please email me directly." },
       { status: 502 },
