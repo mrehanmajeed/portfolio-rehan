@@ -28,11 +28,11 @@ export function About() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 text-xs md:text-sm text-ink/80 leading-relaxed font-light mt-4 md:mt-8 pt-8 md:pt-12 border-t border-black/10">
           <p>
             I am a Software Developer working across AI engineering and
-            full-stack architecture. Most recently I served as an Associate AI
-            Automations Engineer at <b>Mavericks United</b>, building agentic
-            automation on Python and LLM APIs. My work spans retrieval-augmented
-            assistants, autonomous browser agents, and production REST APIs,
-            with earlier roles at <b>Code Generation</b> and{" "}
+            full-stack architecture. Most recently I spent a year as an
+            Associate AI Automations Engineer at <b>Mavericks United</b>,
+            building agentic automation on Python and LLM APIs. My work spans
+            retrieval-augmented assistants, autonomous browser agents, and
+            production REST APIs, following a full-stack internship at{" "}
             <b>Systems Limited</b>.
           </p>
           <div>

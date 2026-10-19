@@ -52,7 +52,7 @@ export const experience: Experience[] = [
     company: "Mavericks United",
     title: "Associate AI Automations Engineer",
     location: "Lahore, Pakistan",
-    period: "Jun 2026 — Sep 2026",
+    period: "Oct 2025 — Sep 2026",
     mostRecent: true,
     summary:
       "Built production-grade AI automation systems with Python, LLM APIs, and agentic AI frameworks, integrating multiple LLM providers into scalable real-world solutions. Delivered a Business Development Automation Agent covering the full BD lifecycle — lead discovery, qualification, outreach, and follow-ups.",
@@ -64,14 +64,6 @@ export const experience: Experience[] = [
     period: "Dec 2025 — May 2026",
     summary:
       "Final Year Project delivered in collaboration with SmartTec Analytics: ChatBU, a production-oriented RAG assistant for Bahria University. Engineered the AI and backend pipeline with Django REST Framework, LangChain, FAISS, and Gemini, and shipped MySQL + Power BI analytics for query logging and administrative insight.",
-  },
-  {
-    company: "Code Generation",
-    title: "Junior AI/ML Developer",
-    location: "Islamabad, Pakistan",
-    period: "Oct 2025 — Dec 2025",
-    summary:
-      "Contributed to AI/ML-driven code generation solutions, supported model training and testing for real-world use cases, and collaborated with senior engineers on applied AI research.",
   },
   {
     company: "Systems Limited",
