@@ -52,7 +52,7 @@ export const experience: Experience[] = [
     company: "Mavericks United",
     title: "Associate AI Automations Engineer",
     location: "Lahore, Pakistan",
-    period: "Oct 2025 — Sep 2026",
+    period: "Jan 2026 — Sep 2026",
     mostRecent: true,
     summary:
       "Built production-grade AI automation systems with Python, LLM APIs, and agentic AI frameworks, integrating multiple LLM providers into scalable real-world solutions. Delivered a Business Development Automation Agent covering the full BD lifecycle — lead discovery, qualification, outreach, and follow-ups.",
